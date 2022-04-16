@@ -26,6 +26,8 @@ repos:
     rev: 3.9.2
     hooks:
       - id: flake8
+        args:
+          - "--ignore=E501,F401"
   - repo: https://github.com/python-jsonschema/check-jsonschema
     rev: 0.14.0
     hooks:
