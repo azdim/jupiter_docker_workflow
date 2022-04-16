@@ -1,0 +1,19 @@
+[[source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[packages]
+Flask = "*"
+requests = "*"
+pre-commit = "*"
+bumpversion = "*"
+
+[dev-packages]
+pytest = "*"
+requests = "*"
+bumpversion = "*"
+Flask = "*"
+
+[requires]
+python_version = "3.8"

@@ -1,0 +1,27 @@
+version: '3.8'
+
+services:
+ # Main Application in development mode
+ application:
+  build:
+   context: .
+  target: distribution
+  ports:
+   - 8000:8000
+  environment:
+   - SERVER_PORT=8000
+   - FLASK_ENV=development
+  volumes:
+   - ./src:/app
+
+ # Example how to deploy service required
+ mongo:
+  image: mongo:4.2.8
+  ports:
+   - 27017:27017
+  volumes:
+   - mongodb:/data/db
+   - mongodb_config:/data/configdb
+volumes:
+ mongodb:
+ mongodb_config:
