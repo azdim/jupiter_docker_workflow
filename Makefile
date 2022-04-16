@@ -1,4 +1,4 @@
-REGISTRY=ghcr.io/azdim
+REGISTRY=ghcr.io/az-scp
 APP=scp-template-docker-image
 VERSION=$(shell cat VERSION)
 
@@ -14,6 +14,11 @@ help: ## show this help
 			fgrep -v fgrep | sed -e 's/\\$$//' | column -t -s '|'
 
 ##-- Common rules
+
+.PHONY: login
+login: ## Setup python environment with pipenv
+	@echo "* Enter vault credentials to login to the Contianer registry"
+	./scripts/docker_login.sh
 
 .PHONY: setup
 setup: ## Setup python environment with pipenv
