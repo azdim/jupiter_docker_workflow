@@ -1,0 +1,76 @@
+# On PR, build and test container
+name: Build and Test Image
+on:
+  # run it during pull request
+  pull_request:
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    outputs:
+      validate_outcome: ${{ steps.outcome.outputs.test }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up Python 3.8
+        uses: actions/setup-python@v1
+        with:
+          python-version: 3.8
+      - name: Linting
+        id: linting
+        run: |
+          pip install pre-commit
+          pre-commit run --all-files
+      - name: ValidateOutcome
+        if: ${{ success() }} || ${{ failure() }}
+        id: outcome
+        run: echo "::set-output name=test::${{ steps.linting.outcome }}"
+  build:
+    if: ${{ always() }}
+    needs: validate
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set outputs
+        id: vars
+        run: echo "::set-output name=sha_short::$(git rev-parse --short HEAD)"
+
+      - name: Set up Docker Buildx
+        id: buildx
+        uses: docker/setup-buildx-action@v1
+
+      - name: Login to GitHub Container Registry
+        id: login
+        uses: docker/login-action@v1
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GHCR_TOKEN }}
+
+      - name: Build Distribution Image
+        id: push
+        uses: docker/build-push-action@v2
+        with:
+          context: ./docker/.
+          push: false
+
+      - name: Update Pull Request
+        uses: actions/github-script@0.9.0
+        if: github.event_name == 'pull_request'
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const output = `#### pre-commit tests 👁️‍🗨️\`${{ needs.validate.outputs.validate_outcome }}\`
+            #### Docker login 🔑\`${{ steps.login.outcome }}\`
+            #### Build distribution image 🤖\`${{ steps.push.outcome }}\`
+            *Pusher: @${{ github.actor }}, Action: \`${{ github.event_name }}\`*`;
+
+            github.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: output
+            })
